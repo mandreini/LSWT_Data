@@ -1,13 +1,16 @@
 import numpy
 import matplotlib.pyplot as plt
 
+#%%
 def round_to_half(num):
     floor = num // 0.5
     if num % 0.5 > 0.25:
         floor = floor + 1 
     return float(floor * 0.5)
 
+#%%
 def plot_pressure(alpha):
+    #plots the pressure distribution for a given alpha
     #input
         #alpha - float: angle of attack in degrees, rounded to nearest 0.5
 
@@ -31,13 +34,16 @@ def plot_pressure(alpha):
     else:
         return "Error: alpha not found in pressure distribution."
 
+#%%
 def plot_values(xval, yval):
+    #plots values given
     #inputs:
         #xval - string: x value for plotting, case sensitive
         #yval - string: y value for plotting, case sensitive
     #outputs:
         #returns and shows matplotlib plot if both xval and yval are in data.
         #returns error string if not.
+
     if xval not in ordered_data.keys():
         return "'" + xval + "' not found in data."
     if yval not in ordered_data.keys():
@@ -46,10 +52,41 @@ def plot_values(xval, yval):
     plt.plot(ordered_data[xval], ordered_data[yval])
     plt.xlabel(xval)
     plt.ylabel(yval)
-    plt.title("Relationship between " + xval + " and " + yval + "in low speed wind tunnel test.")
+    plt.title("Relationship between " + xval + " and " + yval + " in low speed wind tunnel test.")
     plt.show()
     return plt
 
+#%%
+def linear_lstsqrs(xdata, ydata):
+    #determines linear least squares approximation for given data and the error
+    #source LA textbook
+    #inputs: 
+        #xdata, ydata - arrays: x and y data
+    #outputs:
+        #sigma - array: sigma[0] = yint, sigma[1] = m (slope)
+        #error - float: error of approximation
+
+    A = numpy.array([[1, i] for i in xdata])
+    ybar = numpy.array(ydata)    
+    
+    #sigmavec = (ATA)^-1 * ATY
+    ATA = (A.T).dot(A)
+    ATAinv = numpy.linalg.inv(ATA)
+    ATAinvAT = ATAinv.dot(A.T)
+    
+    sigma = ATAinvAT.dot(ybar)
+    
+    #e = SUM( (y - f(x))^2 )
+    xi = xdata
+    yi = sigma[0] + sigma[1]*xi
+
+    error = 0    
+    for val in range(len(xi)):
+        error += (ydata[val] - yi[val])**2
+        
+    return sigma, error
+
+#%%
 data = numpy.genfromtxt("CorrData.csv", delimiter=",", skip_header=2)
 
 f = open("CorrData.csv")
@@ -65,18 +102,18 @@ pressure_dist = {} #keys are alpha, rounded to nearest half
 
 #get columns
 for line in range(len(data)):
-    colCat               = firstline[line]
-    column               = data[:,line]
+    colCat = firstline[line]
+    column = data[:,line]
     ordered_data[colCat] = column
 
 #get pressure distribution for an angle of attack
 #CPu_### -> firstline[15:39]
 #Cpl_### -> firstline[40:63]
 for line in range(len(data)):
-    upperDist              = data[line,15:39] #CPu_001 - CPu_024
-    lowerDist              = data[line,40:64] #CPl_001 - CPl_024
-    alpha                  = round_to_half(data[line,1])
-    pressure_dist[alpha]   = [upperDist, lowerDist]
+    upperDist = data[line,15:39] #CPu_001 - CPu_024
+    lowerDist = data[line,40:64] #CPl_001 - CPl_024
+    alpha = round_to_half(data[line,1])
+    pressure_dist[alpha] = [upperDist, lowerDist]
 
-
+#%%
     
